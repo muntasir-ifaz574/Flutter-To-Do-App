@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -11,13 +13,17 @@ class _HomePageState extends State<HomePage> {
   TextEditingController taskController = TextEditingController();
   TextEditingController editingController = TextEditingController();
 
+  var box = Hive.box('myBox');
 
-  List<String> data = [];
+
+
 
   Future<void> addData() async{
+    int num = box.length+1;
     if(taskController.text != ''){
+      num++;
       setState(() {
-        data.add(taskController.text);
+        box.put(num, taskController.text);
       });
       taskController.clear();
       Navigator.pop(context);
@@ -35,7 +41,7 @@ class _HomePageState extends State<HomePage> {
               autofocus: true,
               enableSuggestions: true,
               decoration: InputDecoration(
-                hintText: data[index],
+                hintText: box.getAt(index),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 )
@@ -50,7 +56,15 @@ class _HomePageState extends State<HomePage> {
                 child: Text('Cancel'),
               ),
               TextButton(
-                  onPressed: (){},
+                  onPressed: (){
+                    if(editingController.text != ''){
+                      setState(() {
+                        box.putAt(index, editingController.text);
+                        editingController.clear();
+                        Navigator.pop(context);
+                      });
+                    }
+                  },
                   child: Text('Update'),
               ),
             ],
@@ -70,7 +84,7 @@ class _HomePageState extends State<HomePage> {
         child: ListView.builder(
           shrinkWrap: true,
           reverse: true,
-          itemCount: data.length,
+          itemCount: box.length,
           itemBuilder: (context, index){
             return Column(
               children: [
@@ -79,11 +93,11 @@ class _HomePageState extends State<HomePage> {
                   child: ListTile(
                     onTap:() =>editTask(index),
                     tileColor: Colors.black12,
-                    title: Text(data[index]),
+                    title: Text(box.getAt(index)),
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Colors.redAccent,), onPressed:(){
                         setState(() {
-                          data.removeAt(index);
+                          box.deleteAt(index);
                         });
                     },
                     ),
